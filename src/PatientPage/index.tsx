@@ -1,14 +1,29 @@
+import React, { useState, useEffect } from 'react';
 import { Box, Typography } from '@material-ui/core';
 import FemaleIcon from '@mui/icons-material/Female';
 import MaleIcon from '@mui/icons-material/Male';
+import axios from 'axios';
 import { useParams } from 'react-router-dom';
 
+import { apiBaseUrl } from '../constants';
+
 import { useStateValue } from '../state';
-import { Patient } from '../types';
+import { Diagnosis, Patient } from '../types';
 
 const PatientPage = () => {
   const { id } = useParams<{ id: string }>();
   const [{ patients }] = useStateValue();
+
+  const [diagnose, setDiagnose] = useState<Diagnosis[] | null>(null);
+
+  const fetchAllDiagnosis = async () => {
+    const request = await axios.get<Diagnosis[]>(`${apiBaseUrl}/diagnoses`);
+    return request.data;
+  };
+
+  useEffect(() => {
+    void fetchAllDiagnosis().then((res) => setDiagnose(res));
+  }, []);
 
   const patient = Object.values(patients).find((p: Patient) => p.id === id);
 
@@ -40,7 +55,11 @@ const PatientPage = () => {
               {e.date} {e.description} <br />
               <ul>
                 {e.diagnosisCodes?.map((d) => {
-                  return <li key={d}>{d}</li>;
+                  return (
+                    <li key={d}>
+                      {d} {diagnose?.find((item) => item.code === d)?.name}
+                    </li>
+                  );
                 })}
               </ul>
             </div>
